@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+	
+		var draws = {};
+		var ctx;
+		var sendBufferCanvas;
+		var sendBufferCtx;
+				
+		function init() {
+			var canvasE = document.querySelector('canvas');
+			ctx = canvasE.getContext('2d');
+			//Store canvas' dimensions on the global ctx variable
+			ctx.width = canvasE.width;
+			ctx.height = canvasE.height;
+			ctx.fillColor = 'white';
+			
+            var socket = io.connect();
+			
+			socket.emit('join');
+			
+			socket.on('helloClient', function(data){
+				console.log('connected to server');
+				socket.name = data.name;
+				
+			});
+			
+			socket.on('draw', function(data){
+				handleMessage(data);
+			});
+			
+			//Event listener for mousedown
+			canvasE.addEventListener("mousedown", function(e){
+				sendMessage(getMouse(e), socket);
+				console.log("clicked");
+			});
+			
+			ctx.fillRect(0,0,ctx.width,ctx.height);
+		}
+		
+		//Helper function, returns the mouse's position on the canvas
+		function getMouse(e){
+				var mouse = {}
+				mouse.x = e.pageX - canvas.offsetLeft;
+  				mouse.y = e.pageY - canvas.offsetTop;
+  				return mouse;
+		}
+		
+		function sendMessage(mouse, socket){
+			
+			sendBufferCanvas = document.createElement("canvas");
+			sendBufferCanvas.height = 200;
+			sendBufferCanvas.width = 200;
+			sendBufferCtx = sendBufferCanvas.getContext('2d');
+			
+			ctx.fillColor = "red";
+			ctx.fillRect(mouse.x,mouse.y,200,200);
+			sendBufferCtx.fillRect(0,0,200,200);
+			
+			var data = {
+				x:mouse.x,
+				y:mouse.y,
+				height:200,
+				width:200,
+				imgData:sendBufferCanvas.toDataURL()
+			};
+			
+			socket.emit('draw', data);
+		}
+		
+		function handleMessage(data){
+			var image = new Image();
+			image.onload = function(){
+				ctx.save();
+				ctx.globalCompositeOperation = "source-over";
+				ctx.drawImage(image, data.x, data.y, data.width, data.height);
+				ctx.restore();
+			};
+			
+			image.src = data.imgData;
+		}
+		
+	
+        //when the page is loaded, call init
+		window.onload = init;
+	</script>
+	<style>
+		body {
+			display: block;
+			background-color: #AAAAFF;
+		}
+	</style>
+</head>
+<body>
+	<p>Click to add objects</p>
+	<canvas id="canvas" height="400" width="600"></canvas>
+</body>
+</html>
