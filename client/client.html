@@ -15,7 +15,7 @@
 			//Store canvas' dimensions on the global ctx variable
 			ctx.width = canvasE.width;
 			ctx.height = canvasE.height;
-			ctx.fillColor = 'white';
+			ctx.fillStyle = 'white';
 			
             var socket = io.connect();
 			
@@ -55,7 +55,7 @@
 			sendBufferCanvas.width = 200;
 			sendBufferCtx = sendBufferCanvas.getContext('2d');
 			
-			ctx.fillColor = "red";
+			ctx.fillStyle = "red";
 			ctx.fillRect(mouse.x,mouse.y,200,200);
 			sendBufferCtx.fillRect(0,0,200,200);
 			
